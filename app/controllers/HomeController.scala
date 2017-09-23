@@ -25,14 +25,29 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
   def addPlace = Action{
-    request => val json = request.body.asJson.get
+    request => val requestBody = request.body.asJson.get
 
-    json.validate[Place] match{
+    requestBody.validate[Place] match{
       case success: JsSuccess[Place]=>
         places = places:+ success.get
-        Ok("OK")
+        Ok(Json.toJson(Map("Responnse"->"Ingresando")))
       case error: JsError => BadRequest(Json.toJson(Map("error"->"error")))
     }
+  }
+
+  def updatePlace = Action{
+    request => val requestBody = request.body.asJson.get
+    requestBody.validate[Place] match{
+      case success: JsSuccess[Place]=>
+        var newPlace = Place(success.get.id, success.get.name, success.get.descripton)
+        places = places.map(x => if(x.id == success.get.id) newPlace else x)
+        Ok("done")
+      case error: JsError => BadRequest(Json.toJson(Map("error"->"error")))
+    }
+  }
+  def removePlace(id:Int) = Action{
+    places = places.filterNot(_.id == id)
+    Ok(Json.toJson(Map("Response"->"Eliminado")))
   }
 
   def index() = Action { implicit request: Request[AnyContent] =>
